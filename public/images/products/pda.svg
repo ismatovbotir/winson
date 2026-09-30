@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c4a6e"/><stop offset="1" stop-color="#0c1b2f"/></linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4dd8ff"/><stop offset="1" stop-color="#0b8fc4"/></linearGradient>
+    <radialGradient id="shadow"><stop offset="0" stop-color="#123a66" stop-opacity=".22"/><stop offset="1" stop-color="#123a66" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect x="1" y="1" width="118" height="118" rx="16" fill="#e8eff8"/>
+  <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#17b8ec" stop-opacity=".5"/><stop offset="1" stop-color="#17b8ec" stop-opacity="0"/></linearGradient>
+  <ellipse cx="60" cy="110" rx="26" ry="4" fill="url(#shadow)"/>
+  <path d="M51 13 L69 13 L75 5 L45 5 Z" fill="url(#beam)"/>
+  <!-- rugged body with corner bumpers -->
+  <rect x="34" y="13" width="52" height="94" rx="11" fill="url(#body)"/>
+  <g fill="#0a1426">
+    <path d="M34 26 Q34 13 47 13 L50 13 L50 17 Q38 17 38 29 L38 30 L34 30 Z"/>
+    <path d="M86 26 Q86 13 73 13 L70 13 L70 17 Q82 17 82 29 L82 30 L86 30 Z"/>
+    <path d="M34 94 Q34 107 47 107 L50 107 L50 103 Q38 103 38 91 L38 90 L34 90 Z"/>
+    <path d="M86 94 Q86 107 73 107 L70 107 L70 103 Q82 103 82 91 L82 90 L86 90 Z"/>
+  </g>
+  <!-- scan window (top edge) + side trigger -->
+  <rect x="50" y="11" width="20" height="4" rx="2" fill="url(#glass)"/>
+  <rect x="31.5" y="40" width="3" height="12" rx="1.5" fill="#17b8ec"/>
+  <rect x="85.5" y="40" width="3" height="12" rx="1.5" fill="#17b8ec"/>
+  <!-- screen UI -->
+  <rect x="41" y="22" width="38" height="44" rx="3" fill="#061d33"/>
+  <rect x="41" y="22" width="38" height="7" rx="3" fill="#17b8ec"/>
+  <rect x="41" y="26" width="38" height="3" fill="#17b8ec"/>
+  <g fill="#ffffff" fill-opacity=".75"><rect x="45" y="34" width="20" height="2.5" rx="1"/><rect x="45" y="41" width="26" height="2.5" rx="1"/><rect x="45" y="48" width="16" height="2.5" rx="1"/></g>
+  <g fill="#4dd8ff"><rect x="45" y="55" width="1.2" height="7"/><rect x="47.5" y="55" width="2.4" height="7"/><rect x="51" y="55" width="1" height="7"/><rect x="53.5" y="55" width="2" height="7"/><rect x="57" y="55" width="1" height="7"/><rect x="59.5" y="55" width="2.4" height="7"/></g>
+  <path d="M43 24 L77 24" stroke="#ffffff" stroke-opacity=".3" stroke-width="1"/>
+  <!-- keypad -->
+  <rect x="52" y="71" width="16" height="6" rx="3" fill="#17b8ec"/>
+  <g fill="#3d5a80">
+    <rect x="42" y="71" width="8" height="6" rx="2"/><rect x="70" y="71" width="8" height="6" rx="2"/>
+    <rect x="42" y="80" width="10" height="5" rx="2"/><rect x="55" y="80" width="10" height="5" rx="2"/><rect x="68" y="80" width="10" height="5" rx="2"/>
+    <rect x="42" y="88" width="10" height="5" rx="2"/><rect x="55" y="88" width="10" height="5" rx="2"/><rect x="68" y="88" width="10" height="5" rx="2"/>
+    <rect x="42" y="96" width="10" height="5" rx="2"/><rect x="55" y="96" width="10" height="5" rx="2"/><rect x="68" y="96" width="10" height="5" rx="2"/>
+  </g>
+</svg>

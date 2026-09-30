@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="800" height="420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#123a66"/>
+      <stop offset="1" stop-color="#081c33"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="420" fill="url(#bg)"/>
+  <g transform="translate(140,160)" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M0 0 h12 l14 60 h54 l12 -42 h-70"/><circle cx="26" cy="78" r="7" fill="#ffffff" stroke="none"/><circle cx="78" cy="78" r="7" fill="#ffffff" stroke="none"/></g><g transform="translate(360,150)" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><path d="M0 20 L45 0 L90 20 L45 40 Z"/><path d="M0 20 v50 l45 20 v-50 Z"/><path d="M90 20 v50 l-45 20 v-50"/></g><g transform="translate(600,150)" fill="none" stroke="#ffffff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"><rect x="0" y="0" width="70" height="70" rx="12"/><path d="M35 16 v38 M16 35 h38" stroke="#17b8ec"/></g><line x1="90" y1="130" x2="700" y2="130" stroke="#17b8ec" stroke-width="2" opacity="0.5" stroke-dasharray="4 6"/>
+</svg>
