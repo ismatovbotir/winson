@@ -98,6 +98,28 @@ return [
         'used_by' => ':count ta qiymat',
     ],
 
+    'mcp' => [
+        'title' => 'AI integratsiyasi (MCP)',
+        'hint' => 'Claude kabi AI yordamchilarni saytga ulash: statistikani tahlil qilish, maqola yozish, mahsulot va toifa qo\'shish. Kirish maxfiy token orqali; tokenni hech kimga bermang.',
+        'endpoint' => 'MCP manzili',
+        'status' => 'Holati',
+        'active' => 'Faol',
+        'off' => 'O\'chirilgan (token yo\'q)',
+        'created' => 'yaratilgan',
+        'last_used' => 'Oxirgi foydalanish',
+        'generate' => 'Token yaratish',
+        'regenerate' => 'Yangi token yaratish',
+        'regenerate_confirm' => 'Yangi token yaratilsa, eskisi darhol ishlamay qoladi. Davom etilsinmi?',
+        'revoke' => 'Tokenni bekor qilish',
+        'revoke_confirm' => 'Token bekor qilinsa, AI saytga ulana olmaydi. Davom etilsinmi?',
+        'token_created' => 'Yangi token yaratildi. Uni hozir nusxalab oling — boshqa ko\'rsatilmaydi.',
+        'token_revoked' => 'Token bekor qilindi.',
+        'copy_now' => 'Token faqat hozir ko\'rsatiladi — nusxalab oling:',
+        'copy_hint' => 'Token parol kabi: uni hech qayerga e\'lon qilmang. Yo\'qotsangiz, yangisini yarating.',
+        'write' => 'AI\'ga o\'zgartirish kiritishga ruxsat berish',
+        'write_hint' => 'Yoqilsa, AI toifa, mahsulot va maqolalarni yaratishi va tahrirlashi mumkin (o\'chira olmaydi). O\'chirilsa — faqat o\'qish va tahlil.',
+    ],
+
     'dashboard' => [
         'title' => 'Xush kelibsiz',
         'subtitle' => 'Sayt tarkibini shu yerdan boshqaring.',

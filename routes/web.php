@@ -88,5 +88,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::get('settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+
+        Route::post('mcp/token', [Admin\McpController::class, 'token'])->name('mcp.token');
+        Route::delete('mcp/token', [Admin\McpController::class, 'revoke'])->name('mcp.revoke');
+        Route::put('mcp/permissions', [Admin\McpController::class, 'permissions'])->name('mcp.permissions');
     });
 });

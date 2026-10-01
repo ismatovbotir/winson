@@ -229,6 +229,23 @@ DB-backed (`articles` table), not static PHP — admin-managed via `/admin`:
 - Login is throttled (10/min); lang/{uz,ru}/validation.php holds the
   validation messages + field names — add new form fields to `attributes`.
 
+## MCP server (AI access)
+
+- `laravel/mcp`; endpoint `POST /mcp` in `routes/ai.php` (outside the web
+  group — no session/CSRF). Server `App\Mcp\Servers\WinsonServer`, tools in
+  `app/Mcp/Tools` (snake_case `#[Name]`s), prompt `write_article`.
+- Auth: `McpTokenAuth` — `Authorization: Bearer wsn_…`; only the SHA-256
+  hash is stored (`settings.mcp_token_hash`). Tokens are generated/revoked
+  in /admin → Settings → AI / MCP (shown once). The middleware also sets the
+  default locale + `URL::defaults`, since SetLocale doesn't run there.
+- Read tools always; write tools (`create_*`/`update_*` for categories,
+  products, articles) only when `settings.mcp_write_enabled = 1` (the
+  `WritesContent` trait's `shouldRegister`). No delete tools, no uploads.
+- All writes go through `App\Mcp\Support\ContentWriter`: same validation as
+  the admin, RichText sanitizing, partial updates, features by code, and
+  `warnings` for anything skipped. `Presenter` shapes responses (uz+ru, URLs).
+- `defaultPaginationLength = 50` so every tool is on the first tools/list page.
+
 ## Site search
 
 - `App\Support\SiteSearch`: in-memory search over categories, products,

@@ -54,4 +54,6 @@
 
         @include('admin.partials.form-actions')
     </form>
+
+    @include('admin.settings._mcp')
 @endsection

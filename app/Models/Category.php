@@ -52,9 +52,11 @@ class Category extends Model
                     : Storage::disk('public')->url($this->image);
             }
 
-            // Convention fallback: the 8 seeded categories each have a
-            // generated icon at this path even with no `image` column set.
-            return asset("images/products/{$this->slug}.svg");
+            // Convention fallback: the seeded categories each have an
+            // illustration named after their slug; anything newer gets a generic one.
+            $path = "images/products/{$this->slug}.svg";
+
+            return asset(file_exists(public_path($path)) ? $path : 'images/products/generic.svg');
         });
     }
 
