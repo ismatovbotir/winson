@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\StoresImages;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Feature;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,14 +16,12 @@ class ProductController extends Controller
 {
     use StoresImages;
 
-    public const SENSOR_TYPES = ['ccd', 'cmos', 'laser'];
-
     public function index(Request $request)
     {
         $categories = Category::orderBy('sort_order')->get();
 
         $products = Product::with('category')
-            ->withCount(['views as views_30d' => fn ($q) => $q->since(30)])
+            ->withCount(['views as views_30d' => fn ($q) => $q->since(30), 'featureValues'])
             ->when($request->integer('category'), fn ($q, $id) => $q->where('category_id', $id))
             ->orderBy('category_id')
             ->orderBy('sort_order')
@@ -47,7 +46,7 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load('specs', 'images', 'relatedProducts');
+        $product->load('specs', 'images', 'relatedProducts', 'featureValues');
 
         return view('admin.products.form', $this->formData($product));
     }
@@ -73,7 +72,9 @@ class ProductController extends Controller
         return [
             'product' => $product,
             'categories' => Category::orderBy('sort_order')->get(),
-            'sensorTypes' => self::SENSOR_TYPES,
+            'features' => Feature::with('options')->orderBy('sort_order')->get()
+                ->groupBy('group')
+                ->sortBy(fn ($rows, $group) => array_search($group, Feature::GROUPS, true)),
             'allProducts' => Product::with('category')
                 ->when($product->exists, fn ($q) => $q->where('id', '!=', $product->id))
                 ->orderBy('category_id')
@@ -93,7 +94,12 @@ class ProductController extends Controller
             'name_ru' => ['required', 'string', 'max:255'],
             'description_uz' => ['nullable', 'string', 'max:5000'],
             'description_ru' => ['nullable', 'string', 'max:5000'],
-            'sensor_type' => ['nullable', Rule::in(self::SENSOR_TYPES)],
+            'features' => ['nullable', 'array'],
+            'features.*' => ['nullable'],
+            'meta_title_uz' => ['nullable', 'string', 'max:255'],
+            'meta_title_ru' => ['nullable', 'string', 'max:255'],
+            'meta_description_uz' => ['nullable', 'string', 'max:500'],
+            'meta_description_ru' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'gallery' => ['nullable', 'array'],
@@ -112,7 +118,8 @@ class ProductController extends Controller
         return DB::transaction(function () use ($request, $product, $data) {
             $fields = collect($data)->only([
                 'category_id', 'slug', 'name_uz', 'name_ru',
-                'description_uz', 'description_ru', 'sensor_type', 'sort_order',
+                'description_uz', 'description_ru', 'sort_order',
+                'meta_title_uz', 'meta_title_ru', 'meta_description_uz', 'meta_description_ru',
             ])->all();
             $fields['sort_order'] ??= 0;
 
@@ -155,11 +162,51 @@ class ProductController extends Controller
                 ]);
             }
 
+            $this->syncFeatures($product, $data['features'] ?? []);
+
             $product->relatedProducts()->sync(
                 collect($data['related'] ?? [])->reject(fn ($id) => (int) $id === $product->id)->all()
             );
 
             return $product;
         });
+    }
+
+    /**
+     * Replace the product's characteristics with the submitted ones. Option ids
+     * must belong to their feature and numbers must be numeric; anything else
+     * is ignored rather than stored.
+     */
+    private function syncFeatures(Product $product, array $input): void
+    {
+        $features = Feature::with('options')->whereIn('id', array_keys($input))->get()->keyBy('id');
+        $rows = [];
+
+        foreach ($input as $featureId => $value) {
+            $feature = $features[$featureId] ?? null;
+            if (! $feature || $value === null || $value === '' || $value === []) {
+                continue;
+            }
+
+            if ($feature->hasOptions()) {
+                $validIds = $feature->options->pluck('id')->map(fn ($id) => (string) $id)->all();
+                $picked = array_intersect(array_map('strval', (array) $value), $validIds);
+                if ($feature->type === 'select') {
+                    $picked = array_slice($picked, 0, 1);
+                }
+                foreach ($picked as $optionId) {
+                    $rows[] = ['feature_id' => $feature->id, 'feature_option_id' => (int) $optionId, 'value_number' => null];
+                }
+            } elseif ($feature->type === 'boolean') {
+                if (in_array((string) $value, ['0', '1'], true)) {
+                    $rows[] = ['feature_id' => $feature->id, 'feature_option_id' => null, 'value_number' => (int) $value];
+                }
+            } elseif (is_numeric($value)) {
+                $rows[] = ['feature_id' => $feature->id, 'feature_option_id' => null, 'value_number' => (float) $value];
+            }
+        }
+
+        $product->featureValues()->delete();
+        $product->featureValues()->createMany($rows);
     }
 }

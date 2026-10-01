@@ -1,1 +1,1 @@
-//
+import './search';

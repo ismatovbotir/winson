@@ -2,9 +2,12 @@
     $contacts = \App\Support\Contacts::all();
     $menu = \App\Models\MenuItem::header()->filter(fn ($item) => $item->href)->values();
     $current = url()->current();
+    // Language switch → this same page in the other language (crawlable, no redirect).
+    $alternates = \App\Support\Seo::page()->alternates();
+    $switchUrl = fn ($code) => $alternates[$code] ?? route('home', ['locale' => $code]);
     // A link is "current" when it points at this page (or a parent section); anchors never are.
     $isCurrent = fn ($item) => ! str_contains($item->href, '#')
-        && ($item->href === $current || ($item->href !== url('/') && str_starts_with($current, rtrim($item->href, '/').'/')));
+        && ($item->href === $current || ($item->href !== route('home') && str_starts_with($current, rtrim($item->href, '/').'/')));
 @endphp
 
 <header data-header class="group sticky top-0 z-50 overflow-x-clip border-b border-line bg-white/80 backdrop-blur-xl backdrop-saturate-150 transition-shadow duration-300 data-[scrolled]:shadow-[0_8px_30px_-12px_rgb(8_28_51/0.25)]">
@@ -30,7 +33,7 @@
 
                 <div class="flex items-center rounded-sm border border-white/15" aria-label="Til / Язык">
                     @foreach (config('app.supported_locales', ['uz', 'ru']) as $code)
-                        <a href="{{ route('locale.switch', $code) }}" hreflang="{{ $code }}"
+                        <a href="{{ $switchUrl($code) }}" hreflang="{{ $code }}" lang="{{ $code }}"
                             @class([
                                 'px-2 py-0.5 transition',
                                 'bg-accent text-navy-deep' => app()->getLocale() === $code,
@@ -45,12 +48,17 @@
 
     {{-- Main bar --}}
     <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5 transition-[height] duration-300 group-data-[scrolled]:h-14 md:h-[4.5rem]" data-header-bar>
-        <a href="{{ url('/') }}" class="flex shrink-0 items-center gap-3" aria-label="Winson — {{ __('site.header.home') }}">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-3" aria-label="Winson — {{ __('site.header.home') }}">
             <img src="{{ asset('images/logo/winson-logo.png') }}" alt="Winson" width="250" height="80" class="h-8 w-auto sm:h-9">
             <span class="hidden border-l border-line pl-3 font-mono text-[10px] uppercase leading-tight tracking-[0.18em] text-accent-ink lg:block">
                 Auto-ID<br><span class="text-ink-soft">{{ __('site.header.since') }}</span>
             </span>
         </a>
+
+        <button type="button" data-search-open aria-label="{{ __('site.search.title') }}"
+            class="ml-auto grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-navy transition hover:border-accent md:hidden">
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/></svg>
+        </button>
 
         <input type="checkbox" id="nav-toggle" class="peer sr-only">
 
@@ -71,7 +79,7 @@
             class="invisible absolute inset-x-0 top-full origin-top -translate-y-2 border-b border-line bg-white opacity-0 shadow-xl transition duration-300
                    peer-checked:visible peer-checked:translate-y-0 peer-checked:opacity-100
                    md:visible md:static md:translate-y-0 md:border-0 md:bg-transparent md:opacity-100 md:shadow-none md:transition-none">
-            <div class="mx-auto flex max-w-6xl flex-col px-5 py-4 md:flex-row md:items-center md:gap-9 md:p-0">
+            <div class="mx-auto flex max-w-6xl flex-col px-5 py-4 md:flex-row md:items-center md:gap-5 md:p-0 lg:gap-7">
                 @foreach ($menu as $i => $item)
                     <a href="{{ $item->href }}" @if ($item->new_tab) target="_blank" rel="noopener noreferrer" @endif
                         @if ($isCurrent($item)) aria-current="page" @endif
@@ -85,7 +93,7 @@
                 {{-- Language switch lives in the status strip on desktop. --}}
                 <div class="mt-4 flex items-center gap-2 md:hidden" aria-label="Til / Язык">
                     @foreach (config('app.supported_locales', ['uz', 'ru']) as $code)
-                        <a href="{{ route('locale.switch', $code) }}" hreflang="{{ $code }}"
+                        <a href="{{ $switchUrl($code) }}" hreflang="{{ $code }}" lang="{{ $code }}"
                             @class([
                                 'rounded-md border px-3 py-1.5 font-mono text-sm font-semibold',
                                 'border-navy bg-navy text-white' => app()->getLocale() === $code,
@@ -93,6 +101,14 @@
                             ])>{{ __('site.locale.'.$code) }}</a>
                     @endforeach
                 </div>
+
+                <button type="button" data-search-open
+                    class="hidden items-center gap-2 rounded-lg border border-line bg-canvas px-3 py-2 text-sm text-ink-soft transition hover:border-accent hover:text-navy md:flex lg:w-48">
+                    <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5" stroke-linecap="round"/></svg>
+                    <span class="hidden flex-1 text-left lg:inline">{{ __('site.search.button') }}</span>
+                    <kbd class="hidden rounded border border-line bg-white px-1.5 font-mono text-[11px] lg:inline" aria-hidden="true">/</kbd>
+                    <span class="sr-only lg:hidden">{{ __('site.search.title') }}</span>
+                </button>
 
                 <a href="{{ \App\Support\Contacts::primaryUrl() }}"
                     class="viewfinder group/cta mt-4 inline-flex items-center justify-center gap-2.5 rounded-md bg-navy px-5 py-3 font-semibold text-white shadow-sm transition

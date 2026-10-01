@@ -51,6 +51,16 @@
             </label>
         </x-admin.card>
 
+        @include('admin.partials.seo-fields', [
+            'model' => $content,
+            'titleField' => 'seo_title',
+            'descriptionField' => 'seo_description',
+            'fallback' => collect(['uz', 'ru'])->mapWithKeys(fn ($l) => [$l => [
+                'title' => __('site.seo.home_title', [], $l),
+                'description' => __('site.seo.home_description', [], $l),
+            ]])->all(),
+        ])
+
         @include('admin.partials.form-actions')
     </form>
 @endsection

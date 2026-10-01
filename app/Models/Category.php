@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSeoFields;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -10,8 +11,17 @@ use Illuminate\Support\Facades\Storage;
 
 class Category extends Model
 {
+    use HasSeoFields;
+
+    protected static function booted(): void
+    {
+        // Content changed → the cached sitemap is stale.
+        static::saved(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+        static::deleted(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+    }
+
     protected $fillable = [
-        'slug', 'name_uz', 'name_ru', 'icon', 'image', 'sort_order',
+        'slug', 'name_uz', 'name_ru', 'description_uz', 'description_ru', 'icon', 'image', 'sort_order',
     ];
 
     public function products(): HasMany
@@ -23,6 +33,13 @@ class Category extends Model
     {
         return Attribute::get(
             fn () => app()->getLocale() === 'ru' ? $this->name_ru : $this->name_uz
+        );
+    }
+
+    protected function description(): Attribute
+    {
+        return Attribute::get(
+            fn () => app()->getLocale() === 'ru' ? $this->description_ru : $this->description_uz
         );
     }
 

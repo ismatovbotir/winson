@@ -4,8 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>@yield('title', config('app.name', 'Winson'))</title>
-        <meta name="description" content="@yield('description', __('site.hero.subtitle'))">
+        @include('partials.seo-head')
 
         @php
             $site = \App\Models\Setting::getMany([
@@ -58,5 +57,7 @@
         </main>
 
         @include('partials.footer')
+
+        @include('partials.search-dialog')
     </body>
 </html>

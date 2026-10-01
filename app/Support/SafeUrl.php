@@ -26,6 +26,27 @@ class SafeUrl
 
         $value = trim($value);
 
-        return str_starts_with($value, '/') ? url($value) : $value;
+        return str_starts_with($value, '/') ? url(self::localize($value)) : $value;
+    }
+
+    /**
+     * Public pages live under /uz/… and /ru/…: give a site-relative path the
+     * current locale prefix unless it already has one or isn't a page
+     * (/storage, /images, /admin…). "/#about" → "/uz#about".
+     */
+    public static function localize(string $path): string
+    {
+        if (preg_match('~^/(uz|ru)(?=/|#|\?|$)~', $path)
+            || preg_match('~^/(storage|images|build|admin|til|sitemap\.xml|robots\.txt)(?=/|$|\?)~', $path)) {
+            return $path;
+        }
+
+        $locale = app()->getLocale();
+
+        return match (true) {
+            $path === '/' => "/{$locale}",
+            str_starts_with($path, '/#'), str_starts_with($path, '/?') => "/{$locale}".substr($path, 1),
+            default => "/{$locale}{$path}",
+        };
     }
 }

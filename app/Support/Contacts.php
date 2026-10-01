@@ -33,7 +33,7 @@ class Contacts
                 'phone' => $s['contact_phone'],
                 'whatsapp' => $s['contact_whatsapp'],
                 'telegram' => $s['contact_telegram'],
-                'address' => $s["contact_address_{$locale}"] ?: __('site.footer.address'),
+                'address' => $s["contact_address_{$locale}"] ?: null,
                 'email_url' => $s['contact_email'] ? 'mailto:'.$s['contact_email'] : null,
                 'phone_url' => $s['contact_phone'] ? 'tel:+'.$digits($s['contact_phone']) : null,
                 'whatsapp_url' => $s['contact_whatsapp'] ? 'https://wa.me/'.$digits($s['contact_whatsapp']) : null,

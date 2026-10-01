@@ -149,4 +149,40 @@
             @endif
         </x-admin.card>
     </div>
+    {{-- Visitor searches --}}
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        @foreach (['searches' => $searches, 'zero' => $zeroSearches] as $kind => $rows)
+            <x-admin.card :title="__('admin.statistics.'.($kind === 'zero' ? 'searches_zero' : 'searches'))" class="!p-0 [&>h2]:px-5 [&>h2]:pt-5 sm:[&>h2]:px-6 sm:[&>h2]:pt-6">
+                @if ($kind === 'zero')
+                    <p class="-mt-3 px-5 pb-3 text-xs text-ink-soft sm:px-6">{{ __('admin.statistics.searches_zero_hint') }}</p>
+                @endif
+                @if ($rows->isEmpty())
+                    <p class="px-5 pb-5 text-sm text-ink-soft sm:px-6">{{ __('admin.statistics.empty') }}</p>
+                @else
+                    <table class="w-full text-left text-sm">
+                        <thead class="border-y border-line bg-canvas-alt text-xs uppercase tracking-wide text-ink-soft">
+                            <tr>
+                                <th class="px-4 py-2.5 sm:px-6">{{ __('admin.statistics.query') }}</th>
+                                <th class="px-4 py-2.5 text-right">{{ __('admin.statistics.times') }}</th>
+                                @if ($kind !== 'zero')<th class="hidden px-4 py-2.5 text-right sm:table-cell sm:pr-6">{{ __('admin.statistics.results') }}</th>@endif
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-line">
+                            @foreach ($rows as $row)
+                                <tr class="hover:bg-canvas">
+                                    <td class="px-4 py-2.5 sm:px-6">
+                                        <a href="{{ route('search.index', ['q' => $row->query]) }}" target="_blank" class="font-medium text-navy hover:text-accent-ink">{{ $row->query }}</a>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-right font-mono tabular-nums text-ink">{{ $n($row->times) }}</td>
+                                    @if ($kind !== 'zero')
+                                        <td @class(['hidden px-4 py-2.5 text-right font-mono tabular-nums sm:table-cell sm:pr-6', 'text-red-600' => ! $row->results, 'text-ink-soft' => $row->results])>{{ $row->results }}</td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </x-admin.card>
+        @endforeach
+    </div>
 @endsection

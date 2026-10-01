@@ -28,7 +28,7 @@
                 <tr>
                     <th class="px-4 py-3">{{ __('admin.common.name') }}</th>
                     <th class="hidden px-4 py-3 md:table-cell">{{ __('admin.products.category') }}</th>
-                    <th class="hidden px-4 py-3 sm:table-cell">{{ __('admin.products.sensor_type') }}</th>
+                    <th class="hidden px-4 py-3 sm:table-cell">{{ __('admin.products.features') }}</th>
                     <th class="hidden px-4 py-3 text-right sm:table-cell">{{ __('admin.statistics.views_30d') }}</th>
                     <th class="px-4 py-3 text-right">{{ __('admin.common.actions') }}</th>
                 </tr>
@@ -46,7 +46,7 @@
                             </div>
                         </td>
                         <td class="hidden px-4 py-3 text-ink-soft md:table-cell">{{ $product->category?->name }}</td>
-                        <td class="hidden px-4 py-3 text-xs text-ink-soft sm:table-cell">{{ $product->sensor_type ? __('site.sensors.'.$product->sensor_type) : '—' }}</td>
+                        <td class="hidden px-4 py-3 font-mono text-xs text-ink-soft sm:table-cell">{{ $product->feature_values_count ?: '—' }}</td>
                         <td class="hidden px-4 py-3 text-right font-mono tabular-nums text-ink sm:table-cell">{{ $product->views_30d }}</td>
                         <td class="whitespace-nowrap px-4 py-3 text-right">
                             <a href="{{ route('admin.products.edit', $product) }}" class="mr-3 text-sm font-medium text-accent-ink hover:text-navy">{{ __('admin.common.edit') }}</a>

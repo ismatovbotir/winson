@@ -37,7 +37,7 @@
 
         <x-admin.card>
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 [&>*]:min-w-0">
-                <div class="flex flex-col gap-1.5">
+                <div class="flex flex-col gap-1.5 sm:col-span-2">
                     <label for="f_category_id" class="text-sm font-medium text-ink">{{ __('admin.products.category') }} <span class="text-accent-ink">*</span></label>
                     <select id="f_category_id" name="category_id" required class="{{ $input }}">
                         <option value=""></option>
@@ -47,15 +47,6 @@
                     </select>
                 </div>
 
-                <div class="flex flex-col gap-1.5">
-                    <label for="f_sensor_type" class="text-sm font-medium text-ink">{{ __('admin.products.sensor_type') }}</label>
-                    <select id="f_sensor_type" name="sensor_type" class="{{ $input }}">
-                        <option value="">{{ __('admin.products.sensor_none') }}</option>
-                        @foreach ($sensorTypes as $type)
-                            <option value="{{ $type }}" @selected(old('sensor_type', $product->sensor_type) === $type)>{{ __('site.sensors.'.$type) }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
                 <x-admin.field name="name_uz" :label="__('admin.common.name').' — '.__('admin.common.lang_uz')" :value="$product->name_uz" required />
                 <x-admin.field name="name_ru" :label="__('admin.common.name').' — '.__('admin.common.lang_ru')" :value="$product->name_ru" required />
@@ -65,6 +56,8 @@
                 <x-admin.field name="sort_order" type="number" :label="__('admin.common.sort_order')" :value="$product->sort_order ?? 0" :hint="__('admin.common.sort_order_hint')" />
             </div>
         </x-admin.card>
+
+        @include('admin.products._features')
 
         <x-admin.card :title="__('admin.products.attributes')">
             <p class="-mt-3 mb-4 text-xs text-ink-soft">{{ __('admin.products.attributes_hint') }}</p>
@@ -127,6 +120,15 @@
                 </div>
             </div>
         </x-admin.card>
+
+        @include('admin.partials.seo-fields', [
+            'model' => $product,
+            'path' => $product->exists && $product->category ? 'katalog/'.$product->category->slug.'/'.$product->slug : 'katalog',
+            'fallback' => collect(['uz', 'ru'])->mapWithKeys(fn ($l) => [$l => [
+                'title' => $product->exists ? $product->{'name_'.$l}.($product->category ? ' — '.$product->category->{'name_'.$l} : '') : '',
+                'description' => $product->{'description_'.$l},
+            ]])->all(),
+        ])
 
         <x-admin.card :title="__('admin.products.related')">
             <select name="related[]" multiple size="10" class="{{ $input }}">

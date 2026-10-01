@@ -15,7 +15,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // One SEO state per request (filled by page views, rendered by the layout).
+        $this->app->scoped(\App\Support\Seo::class);
     }
 
     /**

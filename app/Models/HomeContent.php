@@ -18,6 +18,7 @@ class HomeContent extends Model
         'hero_cta_primary_uz', 'hero_cta_primary_ru',
         'hero_cta_secondary_uz', 'hero_cta_secondary_ru',
         'hero_cta_primary_link', 'hero_cta_secondary_link', 'hero_sparks',
+        'seo_title_uz', 'seo_title_ru', 'seo_description_uz', 'seo_description_ru',
         'about_kicker_uz', 'about_kicker_ru',
         'about_title_uz', 'about_title_ru',
         'about_body_uz', 'about_body_ru',

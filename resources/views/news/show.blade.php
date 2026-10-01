@@ -1,14 +1,21 @@
 @extends('layouts.app')
 
-@section('title', $article->title.' — Winson')
-@section('description', $article->excerpt)
+@php
+    \App\Support\Seo::page()
+        ->title($article->metaTitle() ?: $article->title)
+        ->description($article->metaDescription() ?: $article->excerpt)
+        ->type('article')
+        ->image($article->image_url)
+        ->crumb(__('site.seo.home'), route('home'))
+        ->crumb(__('site.news.kicker'), route('news.index'))
+        ->crumb($article->title)
+        ->node(\App\Support\SchemaOrg::article($article));
+@endphp
 
 @section('content')
 
     <article class="mx-auto max-w-3xl px-5 py-16 sm:py-20">
-        <a href="{{ route('news.index') }}" class="text-sm font-medium text-accent-ink hover:text-navy">
-            {{ __('site.news.back_to_news') }}
-        </a>
+        @include('partials.breadcrumbs')
 
         <p class="mt-4 font-mono text-xs uppercase tracking-wide text-accent-ink">
             {{ $article->published_at->translatedFormat('d.m.Y') }}
@@ -37,7 +44,7 @@
                             class="group overflow-hidden rounded-lg border border-line bg-canvas-alt transition hover:-translate-y-0.5 hover:shadow-md">
                             <div class="aspect-[16/9] w-full overflow-hidden bg-navy">
                                 @if ($other->image_url)
-                                    <img src="{{ $other->image_url }}" alt=""
+                                    <img src="{{ $other->image_url }}" alt="{{ $other->title }}" loading="lazy"
                                         class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
                                 @else
                                     <div class="relative h-full w-full">@include('partials.hex-grid', ['id' => 'nc-'.$other->id, 'lit' => [[14, 1], [15, 2]], 'pulse' => []])</div>

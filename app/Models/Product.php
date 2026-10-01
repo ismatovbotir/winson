@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSeoFields;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -12,9 +13,18 @@ use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
+    use HasSeoFields;
+
+    protected static function booted(): void
+    {
+        // Content changed → the cached sitemap is stale.
+        static::saved(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+        static::deleted(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+    }
+
     protected $fillable = [
         'category_id', 'slug', 'name_uz', 'name_ru',
-        'description_uz', 'description_ru', 'sensor_type', 'image', 'sort_order',
+        'description_uz', 'description_ru', 'image', 'sort_order',
     ];
 
     public function category(): BelongsTo
@@ -25,6 +35,12 @@ class Product extends Model
     public function specs(): HasMany
     {
         return $this->hasMany(ProductAttribute::class)->orderBy('sort_order');
+    }
+
+    /** Structured characteristics (Feature definitions + chosen options/numbers). */
+    public function featureValues(): HasMany
+    {
+        return $this->hasMany(FeatureValue::class);
     }
 
     public function images(): HasMany

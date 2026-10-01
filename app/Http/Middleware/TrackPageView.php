@@ -16,7 +16,7 @@ use Throwable;
  */
 class TrackPageView
 {
-    private const BOT_PATTERN = '/bot|crawl|spider|slurp|facebookexternalhit|preview|monitor|curl|wget|python|headless|lighthouse/i';
+    public const BOT_PATTERN = '/bot|crawl|spider|slurp|facebookexternalhit|preview|monitor|curl|wget|python|headless|lighthouse/i';
 
     public function handle(Request $request, Closure $next): Response
     {

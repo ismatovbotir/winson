@@ -1,23 +1,31 @@
 @extends('layouts.app')
 
-@section('title', $product->name.' — Winson')
-@section('description', $product->description)
 
 @php
     $gallery = collect([$product->image_url])->merge($product->images->pluck('url'))->filter()->values();
+    $featureGroups = \App\Support\FeatureTable::for($product);
+
+    \App\Support\Seo::page()
+        ->title($product->metaTitle() ?: $product->name.' — '.$category->name)
+        ->description($product->metaDescription() ?: $product->description)
+        ->type('product')
+        ->image($gallery->first(fn ($u) => ! str_ends_with(strtolower($u), '.svg')))
+        ->crumb(__('site.seo.home'), route('home'))
+        ->crumb(__('site.catalog_pages.index_kicker'), route('catalog.index'))
+        ->crumb($category->name, route('catalog.category', $category))
+        ->crumb($product->name)
+        ->node(\App\Support\SchemaOrg::product($product, $category));
 @endphp
 
 @section('content')
 
     <section class="mx-auto max-w-6xl px-5 py-16 sm:py-20">
-        <a href="{{ route('catalog.category', $category) }}" class="text-sm font-medium text-accent-ink hover:text-navy">
-            {{ __('site.catalog_pages.item_back', ['category' => $category->name]) }}
-        </a>
+        @include('partials.breadcrumbs')
 
         <div class="mt-6 grid gap-10 lg:grid-cols-2 lg:items-start">
             <div data-gallery>
                 <div class="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-line bg-canvas-alt p-8">
-                    <img data-gallery-main src="{{ $gallery->first() }}" alt="{{ $product->name }}"
+                    <img data-gallery-main src="{{ $gallery->first() }}" alt="{{ $product->name }}" fetchpriority="high"
                         class="h-full w-full object-contain">
                 </div>
 
@@ -31,7 +39,7 @@
                                     'border-accent' => $i === 0,
                                     'border-line' => $i !== 0,
                                 ])>
-                                <img src="{{ $url }}" alt="" class="h-full w-full object-contain">
+                                <img src="{{ $url }}" alt="{{ $product->name }} — {{ $i + 1 }}" loading="lazy" class="h-full w-full object-contain">
                             </button>
                         @endforeach
                     </div>
@@ -43,25 +51,33 @@
                 <h1 class="mt-2 text-3xl font-bold text-navy sm:text-4xl">{{ $product->name }}</h1>
                 <p class="mt-4 text-ink-soft">{{ $product->description }}</p>
 
-                @if ($product->sensor_type || $product->specs->isNotEmpty())
+                @if ($featureGroups->isNotEmpty() || $product->specs->isNotEmpty())
                     <div class="mt-6 overflow-hidden rounded-lg border border-line">
                         <h2 class="bg-canvas-alt px-4 py-3 text-sm font-semibold uppercase tracking-wide text-accent-ink">
                             {{ __('site.catalog_pages.item_specs_title') }}
                         </h2>
-                        <dl class="divide-y divide-line text-sm">
-                            @if ($product->sensor_type)
-                                <div class="grid grid-cols-2 gap-4 px-4 py-2.5">
-                                    <dt class="text-ink-soft">{{ __('site.catalog_pages.sensor_label') }}</dt>
-                                    <dd class="font-medium text-navy">{{ __('site.sensors.'.$product->sensor_type) }}</dd>
-                                </div>
-                            @endif
-                            @foreach ($product->specs as $spec)
-                                <div class="grid grid-cols-2 gap-4 px-4 py-2.5">
-                                    <dt class="text-ink-soft">{{ $spec->label }}</dt>
-                                    <dd class="font-medium text-navy">{{ $spec->value }}</dd>
-                                </div>
-                            @endforeach
-                        </dl>
+                        @foreach ($featureGroups as $group => $rows)
+                            <p class="border-t border-line bg-canvas px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">{{ __('site.filters.groups.'.$group) }}</p>
+                            <dl class="divide-y divide-line text-sm">
+                                @foreach ($rows as [$feature, $value])
+                                    <div class="grid grid-cols-2 gap-4 px-4 py-2.5">
+                                        <dt class="text-ink-soft">{{ $feature->name }}</dt>
+                                        <dd class="font-medium text-navy">{{ $value }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        @endforeach
+                        @if ($product->specs->isNotEmpty())
+                            <p class="border-t border-line bg-canvas px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">{{ __('site.filters.specs_more') }}</p>
+                            <dl class="divide-y divide-line text-sm">
+                                @foreach ($product->specs as $spec)
+                                    <div class="grid grid-cols-2 gap-4 px-4 py-2.5">
+                                        <dt class="text-ink-soft">{{ $spec->label }}</dt>
+                                        <dd class="font-medium text-navy">{{ $spec->value }}</dd>
+                                    </div>
+                                @endforeach
+                            </dl>
+                        @endif
                     </div>
                 @endif
 
@@ -94,7 +110,7 @@
                     @foreach ($similar as $other)
                         <a href="{{ route('catalog.item', [$other->category, $other]) }}"
                             class="flex items-center gap-3 rounded-lg border border-line bg-canvas-alt p-4 transition hover:-translate-y-0.5 hover:shadow-md">
-                            <img src="{{ $other->image_url }}" alt="" class="h-12 w-12 shrink-0 rounded-lg object-contain" aria-hidden="true">
+                            <img src="{{ $other->image_url }}" alt="{{ $other->name }}" loading="lazy" class="h-12 w-12 shrink-0 rounded-lg object-contain">
                             <span class="font-semibold text-navy">{{ $other->name }}</span>
                         </a>
                     @endforeach

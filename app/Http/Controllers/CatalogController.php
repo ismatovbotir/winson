@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Support\ProductFilter;
+use Illuminate\Http\Request;
 
 class CatalogController extends Controller
 {
@@ -14,18 +16,24 @@ class CatalogController extends Controller
         return view('catalog.index', compact('categories'));
     }
 
-    public function category(Category $category)
+    public function category(Request $request, Category $category)
     {
-        $category->load('products');
+        $category->load('products.featureValues.feature', 'products.featureValues.option');
 
-        return view('catalog.category', compact('category'));
+        $filter = new ProductFilter($category->products, (array) $request->query('f', []));
+
+        return view('catalog.category', [
+            'category' => $category,
+            'filter' => $filter,
+            'products' => $filter->results(),
+        ]);
     }
 
     public function item(Category $category, Product $product)
     {
         abort_unless($product->category_id === $category->id, 404);
 
-        $product->load('specs', 'images');
+        $product->load('specs', 'images', 'featureValues.feature', 'featureValues.option');
         $similar = $product->similar()->load('category');
 
         return view('catalog.item', compact('category', 'product', 'similar'));

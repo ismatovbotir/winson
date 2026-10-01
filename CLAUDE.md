@@ -58,13 +58,18 @@ tooling or process unprompted.
 The site ships Uzbek and Russian only; there is no English locale.
 - `config('app.supported_locales')` = `['uz', 'ru']`; default locale `uz`,
   fallback `ru` (`config/app.php`, `.env`).
-- `App\Http\Middleware\SetLocale` (registered globally in `bootstrap/app.php`)
-  resolves locale from session → browser `Accept-Language` → config default.
-- Switch via `GET /til/{locale}` (route name `locale.switch`), which just
-  stores the choice in session and redirects back — see the switcher in
-  `resources/views/partials/header.blade.php`. **Planned to be replaced** by
-  locale-prefixed URLs (`/uz/...`/`/ru/...`) — see the SEO section below —
-  check `routes/web.php` for which scheme is actually live before assuming.
+- Public URLs are locale-prefixed: `/uz/…`, `/ru/…` (route group `{locale}` in
+  `routes/web.php`). `App\Http\Middleware\SetLocale` takes the locale from the
+  URL, **removes the `locale` route parameter** (so controller methods never
+  receive it — don't add a `$locale` argument) and sets
+  `URL::defaults(['locale' => …])`, so `route('catalog.index')` works without
+  passing it. `/` 302s to the visitor's language; old unprefixed
+  `/katalog/…`, `/news/…` and pre-rename category slugs 301 (LocaleController).
+- Use `config('app.default_locale')` (fixed `uz`) for "the site's default
+  language" — `config('app.locale')` is overwritten by `App::setLocale()`.
+- `/admin` is NOT prefixed; its UI language is the session (`/til/{lang}`).
+- Admin-entered site links (menu, banners, hero buttons) are stored without a
+  prefix (`/katalog`, `/#about`); `SafeUrl::href()` adds the current locale.
 - All copy lives in `lang/uz/site.php` and `lang/ru/site.php` (dot-notation
   keys, e.g. `site.hero.title`). Never hardcode English (or any) UI strings
   directly in Blade — add a key to both files and use `__('site....')`.
@@ -108,10 +113,24 @@ Real Eloquent-backed catalog, not static Blade:
 ## Catalog: parameters, gallery, similar items
 
 Beyond the base `name`/`description` per product:
-- `product_attributes` (product_id, label_uz/ru, value_uz/ru, sort_order) —
-  free-form spec rows (e.g. "Interfeys: USB"), admin-managed, rendered as a
-  spec table on the item page. Not the same as `sensor_type`, which stays a
-  simple structured column (ccd/cmos/laser) used for filtering.
+- **Structured characteristics** (the main spec system): `features`
+  (definitions: code, group, type select|multi|boolean|number, uz/ru name +
+  unit, is_filterable), `feature_options`, `feature_values` (product_id,
+  feature_id, feature_option_id | value_number; boolean = 1/0). Models
+  `Feature`/`FeatureOption`/`FeatureValue`, `Product::featureValues()`.
+  `FeatureSeeder` holds the full barcode-scanner parameter catalog (39
+  params); `ProductFeatureSeeder` fills ONLY facts stated in the demo
+  descriptions — real values must come from Winson datasheets, never guessed.
+  Admin: /admin/features (CRUD; type is locked once created) and a grouped
+  card on the product form. `App\Support\FeatureTable::for($product)` gives
+  grouped display rows (item spec table, JSON-LD additionalProperty).
+- Catalog filters: `App\Support\ProductFilter` (in-memory faceting on the
+  category page; `?f[code][]=option`, `?f[code]=1`, `?f[code][min|max]=`).
+  OR within a feature, AND across; facet counts exclude the feature's own
+  selection. Filtered URLs are `noindex`. The old `products.sensor_type`
+  column is gone — sensor is the `sensor` feature.
+- `product_attributes` (label_uz/ru, value_uz/ru) — free-form EXTRA spec rows
+  ("Qo'shimcha parametrlar") for anything that isn't a Feature.
 - `product_images` (product_id, path, sort_order) — gallery beyond the single
   `products.image` cover. `Product::images()` orders by `sort_order`.
 - `product_related` (product_id, related_product_id) — admin-curated "similar
@@ -168,7 +187,7 @@ DB-backed (`articles` table), not static PHP — admin-managed via `/admin`:
   snippets only when set (never hardcode a real tracking ID in source).
 - Resource CRUD (`Route::resource`, `except(['show'])`) for categories,
   products, articles under `admin.*` route names. Product's edit form is the
-  complex one: name/description fields, sensor_type, cover image, gallery
+  complex one: name/description fields, characteristics (features), cover image, gallery
   upload (multiple files), a small vanilla-JS "add row" repeater for
   attributes, and a related-items multi-select — see "Catalog: parameters,
   gallery, similar items" above for the underlying schema.
@@ -210,6 +229,24 @@ DB-backed (`articles` table), not static PHP — admin-managed via `/admin`:
 - Login is throttled (10/min); lang/{uz,ru}/validation.php holds the
   validation messages + field names — add new form fields to `attributes`.
 
+## Site search
+
+- `App\Support\SiteSearch`: in-memory search over categories, products,
+  articles (fine for a catalog of tens/hundreds of items — switch to a real
+  index only if it grows a lot). Both languages searched on every page;
+  model numbers match without dashes; Uzbek apostrophe variants and ё/е
+  normalized; product characteristics (feature option labels) and extra
+  specs are searchable; every query word must match (AND), ranked by field.
+- UI: header button / `/` / Ctrl⌘+K opens `partials/search-dialog` (native
+  `<dialog>`, ARIA combobox+listbox) driven by `resources/js/search.js`
+  (debounced fetch of `search.suggest` JSON, results built with DOM APIs —
+  never innerHTML from data; recent searches in localStorage). Full page:
+  `search.index` (`/{locale}/search?q=`), `noindex`, helpful no-results state.
+  `SiteSearch::highlight()` is the only safe way to mark matches in Blade.
+- Searches from the results page are logged to `search_queries` (not bots,
+  not logged-in admins); /admin/statistics shows top and zero-result queries.
+- WebSite JSON-LD carries a `SearchAction` pointing at `search.index`.
+
 ## Visit statistics
 
 - Self-hosted, no external service: `App\Http\Middleware\TrackPageView` (web
@@ -227,27 +264,31 @@ DB-backed (`articles` table), not static PHP — admin-managed via `/admin`:
 
 ## SEO
 
-Agreed direction (implement/verify against actual code — this may be ahead
-of or behind what's committed at any given moment):
-- **Locale-prefixed URLs** (`/uz/...`, `/ru/...`) replacing the old
-  session-based `/til/{locale}` switcher, specifically so `hreflang`
-  alternate-language tags are possible (they need a distinct URL per
-  language to point at). Bare `/` redirects to the browser's preferred
-  supported locale. `admin/*` routes are NOT locale-prefixed (single admin
-  UI, not indexed).
-- Per-page `<title>` and meta description on every page (including
-  home/catalog-index/category/news-index, which were initially missed).
-- Open Graph + Twitter Card tags, `<link rel="canonical">`, `hreflang`
-  alternates (including `x-default`) in the layout `<head>`.
-- JSON-LD: sitewide `Organization`, `Product` on item pages, `Article` on
-  news show pages.
-- `/sitemap.xml` and `/robots.txt` served via real routes/controllers (not
-  static files in `public/`) so they can include the real domain and both
-  locale URLs per page — delete the static `public/robots.txt` /
-  `public/favicon.ico` stub if they'd otherwise shadow the dynamic route.
-- Real favicon generated from the Winson logo (brand navy + a simple mark),
-  referenced via explicit `<link rel="icon">`/`apple-touch-icon"` tags rather
-  than relying on the implicit `/favicon.ico` lookup.
+Implemented (audit by the searchfit-seo auditor, 2026-09-30):
+- `App\Support\Seo` (request-scoped): page views set it at the top of the
+  template — `Seo::page()->title()->description()->image()->crumb()->node()` —
+  and `partials/seo-head.blade.php` renders `<title>`, description, canonical,
+  hreflang (uz/ru/x-default), Open Graph/Twitter, favicons and one JSON-LD
+  `@graph` (Organization + WebSite sitewide, BreadcrumbList, plus page nodes
+  from `App\Support\SchemaOrg`: Product without offers — never invent prices —
+  BlogPosting, CollectionPage/ItemList). `partials/breadcrumbs` shows the same
+  crumbs visibly. New public pages must set Seo, not `@section('title')`.
+- SVG images are skipped for og:image; fallback `public/images/og-default.png`.
+  Favicons: `public/favicon.svg|ico|-32.png`, `apple-touch-icon.png`.
+- Admin SEO tools: `admin.partials.seo-fields` (UZ/RU title + description,
+  counters, Google preview) on categories, products, articles
+  (`meta_title_*`, `meta_description_*`, trait `HasSeoFields`) and the hero page
+  (homepage `home_contents.seo_*`). Categories have an intro text
+  (`description_uz/ru`). Settings → SEO: indexing switch (off = robots.txt
+  `Disallow: /`), catalog/news listing titles+descriptions
+  (`Setting::localized()`), social profile URLs (`seo_same_as` → sameAs).
+- `/robots.txt` and `/sitemap.xml` are routes (`SeoController`); the sitemap is
+  cached and cleared on Category/Product/Article save/delete and settings save.
+  Don't add static `public/robots.txt` / `sitemap.xml` — they would shadow them.
+- Still open (content/owner work): real contacts, longer product/category
+  copy + real photos + specs, longer articles; Figtree/Space Mono have no
+  Cyrillic (Russian renders in a fallback font); production `APP_URL`;
+  submit the sitemap to Google Search Console + Yandex Webmaster.
 
 ## Working notes
 

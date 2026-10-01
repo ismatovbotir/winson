@@ -19,20 +19,18 @@
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wider text-accent">{{ __('site.footer.products_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm text-canvas/80">
-                    <li><a href="{{ route('catalog.category', 'handheld') }}" class="hover:text-white">{{ __('site.categories.handheld') }}</a></li>
-                    <li><a href="{{ route('catalog.category', 'industrial') }}" class="hover:text-white">{{ __('site.categories.industrial') }}</a></li>
-                    <li><a href="{{ route('catalog.category', 'pda') }}" class="hover:text-white">{{ __('site.categories.pda') }}</a></li>
-                    <li><a href="{{ route('catalog.category', 'smart_terminal') }}" class="hover:text-white">{{ __('site.categories.smart_terminal') }}</a></li>
+                    @foreach (once(fn () => \App\Models\Category::orderBy('sort_order')->get(['id', 'slug', 'name_uz', 'name_ru'])) as $footerCategory)
+                        <li><a href="{{ route('catalog.category', $footerCategory) }}" class="hover:text-white">{{ $footerCategory->name }}</a></li>
+                    @endforeach
                 </ul>
             </div>
 
             <div>
                 <p class="text-sm font-semibold uppercase tracking-wider text-accent">{{ __('site.footer.company_heading') }}</p>
                 <ul class="mt-3 space-y-2 text-sm text-canvas/80">
-                    <li><a href="{{ url('/') }}#about" class="hover:text-white">{{ __('site.footer.about_us') }}</a></li>
+                    <li><a href="{{ route('home') }}#about" class="hover:text-white">{{ __('site.footer.about_us') }}</a></li>
+                    <li><a href="{{ route('catalog.index') }}" class="hover:text-white">{{ __('site.nav.products') }}</a></li>
                     <li><a href="{{ route('news.index') }}" class="hover:text-white">{{ __('site.nav.news') }}</a></li>
-                    <li><a href="#" class="hover:text-white">{{ __('site.footer.oem_design') }}</a></li>
-                    <li><a href="#" class="hover:text-white">{{ __('site.footer.faq') }}</a></li>
                 </ul>
             </div>
 
@@ -58,7 +56,9 @@
 
         <div class="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs text-canvas/50 sm:flex-row sm:items-center sm:justify-between">
             <p>&copy; {{ __('site.footer.copyright', ['year' => date('Y')]) }}</p>
-            <p>{{ \App\Support\Contacts::all()['address'] }}</p>
+            @if (\App\Support\Contacts::all()['address'])
+                <p>{{ \App\Support\Contacts::all()['address'] }}</p>
+            @endif
         </div>
     </div>
 </footer>

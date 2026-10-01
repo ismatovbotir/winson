@@ -18,6 +18,7 @@
                     'admin.statistics' => ['admin.nav.statistics', 'admin.statistics'],
                     'admin.categories.index' => ['admin.nav.categories', 'admin.categories.*'],
                     'admin.products.index' => ['admin.nav.products', 'admin.products.*'],
+                    'admin.features.index' => ['admin.nav.features', 'admin.features.*'],
                     'admin.articles.index' => ['admin.nav.articles', 'admin.articles.*'],
                     'admin.hero.edit' => ['admin.nav.hero', 'admin.hero.*'],
                     'admin.banners.index' => ['admin.nav.banners', 'admin.banners.*'],

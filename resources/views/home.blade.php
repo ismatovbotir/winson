@@ -1,5 +1,11 @@
 @extends('layouts.app')
 
+@php
+    \App\Support\Seo::page()
+        ->title($home->t('seo_title') ?: __('site.seo.home_title'))
+        ->description($home->t('seo_description') ?: __('site.seo.home_description'));
+@endphp
+
 @section('content')
 
     @if ($banners->isNotEmpty())

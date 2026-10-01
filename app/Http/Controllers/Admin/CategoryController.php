@@ -65,6 +65,12 @@ class CategoryController extends Controller
             'slug' => ['required', 'alpha_dash', 'max:100', Rule::unique('categories')->ignore($category)],
             'name_uz' => ['required', 'string', 'max:255'],
             'name_ru' => ['required', 'string', 'max:255'],
+            'description_uz' => ['nullable', 'string', 'max:5000'],
+            'description_ru' => ['nullable', 'string', 'max:5000'],
+            'meta_title_uz' => ['nullable', 'string', 'max:255'],
+            'meta_title_ru' => ['nullable', 'string', 'max:255'],
+            'meta_description_uz' => ['nullable', 'string', 'max:500'],
+            'meta_description_ru' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);

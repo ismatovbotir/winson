@@ -22,6 +22,12 @@ class Setting extends Model
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);
     }
 
+    /** Current-locale value of a key stored as {key}_uz / {key}_ru. */
+    public static function localized(string $key): ?string
+    {
+        return static::get($key.'_'.(app()->getLocale() === 'ru' ? 'ru' : 'uz')) ?: null;
+    }
+
     /** @return array<string, string|null> */
     public static function getMany(array $keys): array
     {

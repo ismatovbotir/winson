@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasSeoFields;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -9,6 +10,15 @@ use Illuminate\Support\Facades\Storage;
 
 class Article extends Model
 {
+    use HasSeoFields;
+
+    protected static function booted(): void
+    {
+        // Content changed → the cached sitemap is stale.
+        static::saved(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+        static::deleted(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE));
+    }
+
     protected $fillable = [
         'slug', 'image', 'published_at', 'read_minutes',
         'title_uz', 'title_ru', 'excerpt_uz', 'excerpt_ru', 'body_uz', 'body_ru',

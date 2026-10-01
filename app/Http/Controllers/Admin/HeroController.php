@@ -25,6 +25,10 @@ class HeroController extends Controller
         $rules = [
             'hero_cta_primary_link' => ['nullable', 'string', 'max:500', 'regex:'.SafeUrl::PATTERN],
             'hero_cta_secondary_link' => ['nullable', 'string', 'max:500', 'regex:'.SafeUrl::PATTERN],
+            'seo_title_uz' => ['nullable', 'string', 'max:255'],
+            'seo_title_ru' => ['nullable', 'string', 'max:255'],
+            'seo_description_uz' => ['nullable', 'string', 'max:500'],
+            'seo_description_ru' => ['nullable', 'string', 'max:500'],
         ];
         foreach (self::TEXT_FIELDS as $field) {
             $max = $field === 'hero_subtitle' ? 1000 : 255;

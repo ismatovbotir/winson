@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
-@section('title', __('site.catalog_pages.index_title').' — Winson')
+@php
+    \App\Support\Seo::page()
+        ->title(\App\Models\Setting::localized('seo_catalog_title') ?: __('site.seo.catalog_title'))
+        ->description(\App\Models\Setting::localized('seo_catalog_description') ?: __('site.seo.catalog_description'))
+        ->crumb(__('site.seo.home'), route('home'))
+        ->crumb(__('site.catalog_pages.index_kicker'))
+        ->node(\App\Support\SchemaOrg::collection(__('site.seo.catalog_title'),
+            $categories->map(fn ($c) => ['name' => $c->name, 'url' => route('catalog.category', $c)])));
+@endphp
 
 @section('content')
 

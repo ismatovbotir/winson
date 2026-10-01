@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
-@section('title', __('site.news.index_title').' — Winson')
+@php
+    \App\Support\Seo::page()
+        ->title(\App\Models\Setting::localized('seo_news_title') ?: __('site.seo.news_title'))
+        ->description(\App\Models\Setting::localized('seo_news_description') ?: __('site.seo.news_description'))
+        ->crumb(__('site.seo.home'), route('home'))
+        ->crumb(__('site.news.kicker'))
+        ->node(\App\Support\SchemaOrg::collection(__('site.seo.news_title'),
+            $articles->map(fn ($a) => ['name' => $a->title, 'url' => route('news.show', $a)])));
+@endphp
 
 @section('content')
 
@@ -18,7 +26,7 @@
                         class="group flex flex-col overflow-hidden rounded-xl border border-line bg-canvas-alt transition hover:-translate-y-0.5 hover:shadow-md">
                         <div class="aspect-[16/9] w-full overflow-hidden bg-navy">
                             @if ($article->image_url)
-                                <img src="{{ $article->image_url }}" alt=""
+                                <img src="{{ $article->image_url }}" alt="{{ $article->title }}" loading="lazy"
                                     class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
                             @else
                                 <div class="relative h-full w-full">@include('partials.hex-grid', ['id' => 'nc-'.$article->id, 'lit' => [[14, 1], [15, 2]], 'pulse' => []])</div>

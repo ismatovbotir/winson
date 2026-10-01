@@ -94,6 +94,10 @@ return [
 
     'supported_locales' => ['uz', 'ru'],
 
+    // The site's primary language (hreflang x-default, legacy redirects).
+    // Unlike `locale`, this is never changed at runtime by App::setLocale().
+    'default_locale' => env('APP_LOCALE', 'uz'),
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*

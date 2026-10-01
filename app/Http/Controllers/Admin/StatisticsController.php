@@ -41,6 +41,8 @@ class StatisticsController extends Controller
             'products' => $this->topSubjects($base(), Product::class, ['category']),
             'articles' => $this->topSubjects($base(), Article::class),
             'categories' => $this->topSubjects($base(), Category::class),
+            'searches' => $this->searches($since, false),
+            'zeroSearches' => $this->searches($since, true),
             'referrers' => $base()->whereNotNull('referrer_host')
                 ->select('referrer_host', DB::raw('COUNT(*) as views'))
                 ->groupBy('referrer_host')->orderByDesc('views')->limit(10)->get(),
@@ -67,6 +69,16 @@ class StatisticsController extends Controller
 
             return ['date' => $date, 'views' => (int) ($counts[$date->toDateString()] ?? 0)];
         });
+    }
+
+    /** Top visitor search queries; $zero = only the ones that found nothing. */
+    private function searches(?int $days, bool $zero): Collection
+    {
+        return DB::table('search_queries')
+            ->when($days, fn ($q) => $q->where('created_at', '>=', now()->subDays($days - 1)->startOfDay()))
+            ->when($zero, fn ($q) => $q->where('results', 0))
+            ->select('query', DB::raw('COUNT(*) as times'), DB::raw('MAX(results) as results'), DB::raw('MAX(created_at) as last_at'))
+            ->groupBy('query')->orderByDesc('times')->orderByDesc('last_at')->limit(15)->get();
     }
 
     /** Most-viewed models of one type, with their view/visitor counts attached. */

@@ -67,6 +67,15 @@
             </x-admin.card>
         @endforeach
 
+        @include('admin.partials.seo-fields', [
+            'model' => $article,
+            'path' => 'news/'.$article->slug,
+            'fallback' => collect(['uz', 'ru'])->mapWithKeys(fn ($l) => [$l => [
+                'title' => $article->{'title_'.$l},
+                'description' => $article->{'excerpt_'.$l},
+            ]])->all(),
+        ])
+
         @include('admin.partials.form-actions', ['cancel' => route('admin.articles.index')])
     </form>
 @endsection
