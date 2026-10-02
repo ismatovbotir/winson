@@ -11,5 +11,5 @@ use Laravel\Mcp\Facades\Mcp;
 | appear when "allow changes" is enabled there.
 */
 Mcp::web('/mcp', WinsonServer::class)
-    ->middleware([McpTokenAuth::class, 'throttle:60,1'])
+    ->middleware([McpTokenAuth::class, 'throttle:mcp'])
     ->name('mcp');

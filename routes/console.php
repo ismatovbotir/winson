@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Remove article-editor uploads no article uses (needs the scheduler cron on the server).
 Schedule::command('articles:prune-images')->daily();
+
+// End idle Telegram bot conversations: manager summary + hot-lead alerts.
+Schedule::command('telegram:close-idle')->everyFiveMinutes()->withoutOverlapping();

@@ -15,7 +15,7 @@ class MenuSeeder extends Seeder
         }
 
         $items = [
-            ['nav.products', '/katalog'],
+            ['nav.products', '/catalog'],
             ['nav.news', '/news'],
             ['nav.about', '/#about'],
             ['nav.contact', '/#contact'],

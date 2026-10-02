@@ -64,12 +64,14 @@ The site ships Uzbek and Russian only; there is no English locale.
   receive it — don't add a `$locale` argument) and sets
   `URL::defaults(['locale' => …])`, so `route('catalog.index')` works without
   passing it. `/` 302s to the visitor's language; old unprefixed
-  `/katalog/…`, `/news/…` and pre-rename category slugs 301 (LocaleController).
+  `/catalog/…`, `/news/…`, old section names `/katalog`/`/category` (any locale)
+  and pre-rename category slugs 301 (LocaleController). The catalog section is
+  `catalog` in every language — never `katalog`.
 - Use `config('app.default_locale')` (fixed `uz`) for "the site's default
   language" — `config('app.locale')` is overwritten by `App::setLocale()`.
 - `/admin` is NOT prefixed; its UI language is the session (`/til/{lang}`).
 - Admin-entered site links (menu, banners, hero buttons) are stored without a
-  prefix (`/katalog`, `/#about`); `SafeUrl::href()` adds the current locale.
+  prefix (`/catalog`, `/#about`); `SafeUrl::href()` adds the current locale.
 - All copy lives in `lang/uz/site.php` and `lang/ru/site.php` (dot-notation
   keys, e.g. `site.hero.title`). Never hardcode English (or any) UI strings
   directly in Blade — add a key to both files and use `__('site....')`.
@@ -99,11 +101,11 @@ Real Eloquent-backed catalog, not static Blade:
   `name_ru` (and Product has `description_uz`/`description_ru`) columns plus
   a `name`/`description` accessor that resolves to the current locale —
   no translation package needed since it's only two locales.
-- Routes (`routes/web.php`): `catalog.index` (`/katalog`), `catalog.category`
-  (`/katalog/{category:slug}`), `catalog.item` (`/katalog/{category:slug}/{product:slug}`)
+- Routes (`routes/web.php`): `catalog.index` (`/{locale}/catalog`), `catalog.category`
+  (`/{locale}/catalog/{category:slug}`), `catalog.item` (`/{locale}/catalog/{category:slug}/{product:slug}`)
   — `CatalogController`, views under `resources/views/catalog/`.
 - `database/seeders/CatalogSeeder.php` seeds 8 categories × 2 products each.
-  The homepage products grid and `/katalog` both render DB categories via the
+  The homepage products grid and `/catalog` both render DB categories via the
   shared `partials/category-card.blade.php` (lang `categories` keys are now
   only used by the footer links). Product names are real Winson model names pulled from
   winsonchina.com listings; descriptions are original placeholder copy.
@@ -229,6 +231,54 @@ DB-backed (`articles` table), not static PHP — admin-managed via `/admin`:
 - Login is throttled (10/min); lang/{uz,ru}/validation.php holds the
   validation messages + field names — add new form fields to `attributes`.
 
+## Telegram bot, Mini App, AI assistant
+
+- Config only in `.env` → `config/services.php` (`telegram.*`, `ai.*`). Never
+  hardcode tokens. After changing them: `php artisan config:cache` and
+  `php artisan telegram:setup` (webhook + menu button + commands; needs public
+  HTTPS `APP_URL`).
+- Mini App: `/tg` (entry, picks uz/ru) and `/tg/{locale}/…` (`TelegramAppController`,
+  views `resources/views/tg/*`, Telegram theme CSS vars, native Back/Main
+  buttons). Leads POST `/tg/lead` are authenticated ONLY by
+  `Telegram::validateInitData()` (HMAC per Telegram spec, 24h TTL); CSRF is
+  exempted for it and the webhook. `/tg*` may be framed by telegram.org.
+- Bot webhook `TelegramWebhookController` (secret header required): /start →
+  client saved (`telegram_clients`) and asked to share phone (registration);
+  text → `App\Support\AiAssistant` (after-response) — scanners/Winson only, reply in
+  the client's language, plain text, daily limit `AI_DAILY_LIMIT`. Non-text →
+  "text only". Conversation kept in `telegram_messages` (context + admin view).
+- Conversations (`telegram_conversations`, `App\Support\BotConversations`): start
+  with a registered client's first question (or after the previous ended /
+  idle > `AI_CONVERSATION_TIMEOUT` min); AI context = that conversation + the
+  previous one's summary. End by client (persistent "✅ end" button, /end) →
+  closed at once, AI summary + interest (high/medium/low) after response,
+  inline [contact yes/no] → `requestContact()` creates a `bot` lead + alerts
+  managers, then ⭐1–5 rating (callback_data `c:{id}:{0|1}`, `r:{id}:{n}`;
+  only the conversation's own client may answer). End by inactivity →
+  `telegram:close-idle` (scheduled every 5 min, needs the scheduler cron):
+  summary, managers alerted for high interest, client not messaged.
+- Chatbot training (/admin → "Chatbotni o'qitish"): `bot_knowledge` (+ products
+  pivot, `bot_knowledge_images`). kind `guide` = scanner setting steps +
+  programming-barcode images, delivered VERBATIM: the AI only emits
+  `[[guide:ID]]` (protocol text is in `AiAssistant::knowledgeSection()`, not
+  the editable .md), `AiAssistant::parseReply()` drops unknown ids, and
+  `Telegram::sendGuide()` sends the stored text + images (multipart upload,
+  albums ≤10). The AI must never write setting steps/barcodes itself. kind
+  `faq` = facts the AI may use in its own words. Instructions can be edited in
+  the admin → saved to `storage/app/ai/telegram-assistant.md` (overrides the
+  repo default; "reset" deletes it). Test chat = same `answer()` with an
+  unsaved client.
+- AI provider: any OpenAI-compatible API (`AI_BASE_URL/AI_API_KEY/AI_MODEL`;
+  free options listed in config/services.php). The assistant's instructions
+  live in **`resources/ai/telegram-assistant.md`** (edited by the owner, incl.
+  a "Practice notes" section) — keep rules there, not in PHP. The live
+  catalog/categories/contacts are appended in code.
+- Admin: /admin/leads (status new/in_progress/done), /admin/telegram-clients
+  (phone, conversation, block), Settings → Telegram status card.
+- Rate limits are NAMED (`search`, `tg-lead`, `admin-login`, `uploads`, `mcp`
+  in AppServiceProvider) — plain `throttle:N,1` is shared per IP across routes.
+  The webhook has no limiter (Telegram IPs carry all bot traffic).
+
 ## MCP server (AI access)
 
 - `laravel/mcp`; endpoint `POST /mcp` in `routes/ai.php` (outside the web
@@ -315,7 +365,7 @@ Implemented (audit by the searchfit-seo auditor, 2026-09-30):
   cells. No scanline/sweeping-laser animations anywhere (removed on request).
 
 - Homepage (`resources/views/home.blade.php`) is a themed teaser that links
-  out to the real `/katalog` and `/news` pages — keep those links working
+  out to the real `/catalog` and `/news` pages — keep those links working
   when editing either.
 - Prefer server-rendered Blade + Livewire over adding a JS framework/SPA layer.
 - Since this is a small, low-traffic informational site, favor straightforward

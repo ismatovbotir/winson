@@ -22,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
             SecurityHeaders::class,
         ]);
 
+        // Telegram endpoints are authenticated by Telegram itself (webhook secret /
+        // signed initData), not by a browser session, so CSRF doesn't apply.
+        $middleware->validateCsrfTokens(except: ['telegram/webhook', 'tg/lead']);
+
         $middleware->alias([
             'admin.auth' => AdminAuthenticate::class,
         ]);

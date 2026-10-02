@@ -4,7 +4,7 @@ namespace App\Support;
 
 /**
  * Admin-entered link targets (banner buttons, menu items). Only site-relative
- * paths ("/katalog", "/#about", "#contact") and http(s)/mailto/tel URLs are
+ * paths ("/catalog", "/#about", "#contact") and http(s)/mailto/tel URLs are
  * allowed, so a stored value can never become a `javascript:`/`data:` link
  * or a protocol-relative "//evil.com" redirect.
  */

@@ -29,17 +29,30 @@ class LocaleController extends Controller
         return redirect('/'.$locale, 302)->header('Vary', 'Accept-Language, Cookie');
     }
 
-    /** Old /katalog/… and /news/… URLs → permanent redirect to the /uz/ version. */
+    /** Unprefixed URLs (/catalog/…, /katalog/…, /news/…) → permanent redirect to the /uz/ version. */
     public function legacy(Request $request, string $section, ?string $path = null)
     {
-        $segments = $path === null || $path === '' ? [] : explode('/', $path);
-        if ($section === 'katalog' && isset($segments[0])) {
-            $segments[0] = self::LEGACY_CATEGORY_SLUGS[$segments[0]] ?? $segments[0];
+        return redirect(self::target(config('app.default_locale'), $section, $path), 301);
+    }
+
+    /** /uz/katalog/… and /uz/category/… (old section names) → /uz/catalog/…. */
+    public function legacySection(string $old, ?string $path = null)
+    {
+        return redirect(self::target(app()->getLocale(), $old, $path), 301);
+    }
+
+    /** New URL for an old section + path: catalog sections become "catalog", old slugs are mapped. */
+    private static function target(string $locale, string $section, ?string $path): string
+    {
+        $segments = $path === null || $path === '' ? [] : explode('/', trim($path, '/'));
+        if ($section !== 'news') {
+            $section = 'catalog';
+            if (isset($segments[0])) {
+                $segments[0] = self::LEGACY_CATEGORY_SLUGS[$segments[0]] ?? $segments[0];
+            }
         }
 
-        $target = '/'.config('app.default_locale').'/'.implode('/', array_merge([$section], $segments));
-
-        return redirect($target, 301);
+        return '/'.$locale.'/'.implode('/', array_merge([$section], $segments));
     }
 
     /**
@@ -48,7 +61,7 @@ class LocaleController extends Controller
      */
     public function legacyCategory(string $slug, ?string $rest = null)
     {
-        return redirect('/'.app()->getLocale().'/katalog/'.self::LEGACY_CATEGORY_SLUGS[$slug].($rest ? '/'.$rest : ''), 301);
+        return redirect('/'.app()->getLocale().'/catalog/'.self::LEGACY_CATEGORY_SLUGS[$slug].($rest ? '/'.$rest : ''), 301);
     }
 
     public static function legacySlugPattern(): string

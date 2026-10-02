@@ -16,6 +16,9 @@
                 $nav = [
                     'admin.dashboard' => ['admin.nav.dashboard', 'admin.dashboard'],
                     'admin.statistics' => ['admin.nav.statistics', 'admin.statistics'],
+                    'admin.leads.index' => ['admin.nav.leads', 'admin.leads.*'],
+                    'admin.telegram-clients.index' => ['admin.nav.telegram_clients', 'admin.telegram-clients.*'],
+                    'admin.bot-knowledge.index' => ['admin.nav.bot', 'admin.bot-knowledge.*|admin.bot.*'],
                     'admin.categories.index' => ['admin.nav.categories', 'admin.categories.*'],
                     'admin.products.index' => ['admin.nav.products', 'admin.products.*'],
                     'admin.features.index' => ['admin.nav.features', 'admin.features.*'],
@@ -50,8 +53,8 @@
                             <a href="{{ route($route) }}"
                                 @class([
                                     'whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition',
-                                    'bg-white/10 text-white' => request()->routeIs($pattern),
-                                    'text-canvas/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs($pattern),
+                                    'bg-white/10 text-white' => request()->routeIs(...explode('|', $pattern)),
+                                    'text-canvas/70 hover:bg-white/5 hover:text-white' => ! request()->routeIs(...explode('|', $pattern)),
                                 ])>
                                 {{ __($label) }}
                             </a>

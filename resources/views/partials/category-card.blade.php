@@ -1,4 +1,4 @@
-{{-- Category tile used on the homepage and /katalog. Expects $category (with products_count). --}}
+{{-- Category tile used on the homepage and /catalog. Expects $category (with products_count). --}}
 <a href="{{ route('catalog.category', $category) }}"
     class="group flex flex-col overflow-hidden rounded-xl border border-line bg-white transition duration-300 hover:-translate-y-1 hover:border-accent/50 hover:shadow-[0_18px_40px_-20px_rgb(18_58_102/0.45)]">
     <div class="p-2.5 pb-0">

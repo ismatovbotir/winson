@@ -123,7 +123,7 @@
 
         @include('admin.partials.seo-fields', [
             'model' => $product,
-            'path' => $product->exists && $product->category ? 'katalog/'.$product->category->slug.'/'.$product->slug : 'katalog',
+            'path' => $product->exists && $product->category ? 'catalog/'.$product->category->slug.'/'.$product->slug : 'catalog',
             'fallback' => collect(['uz', 'ru'])->mapWithKeys(fn ($l) => [$l => [
                 'title' => $product->exists ? $product->{'name_'.$l}.($product->category ? ' — '.$product->category->{'name_'.$l} : '') : '',
                 'description' => $product->{'description_'.$l},

@@ -37,7 +37,7 @@ class Banner extends Model
             : null);
     }
 
-    /** Relative paths ("/katalog/pda") resolve against the site; full URLs pass through. */
+    /** Relative paths ("/catalog/pda") resolve against the site; full URLs pass through. */
     protected function href(): Attribute
     {
         return Attribute::get(fn () => SafeUrl::href($this->link));

@@ -55,5 +55,6 @@
         @include('admin.partials.form-actions')
     </form>
 
+    @include('admin.settings._telegram')
     @include('admin.settings._mcp')
 @endsection

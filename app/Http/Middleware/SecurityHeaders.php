@@ -18,7 +18,13 @@ class SecurityHeaders
         $response = $next($request);
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
-        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        if ($request->is('tg', 'tg/*')) {
+            // Telegram Web (web.telegram.org) shows Mini Apps in an iframe.
+            $response->headers->set('Content-Security-Policy', "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org");
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        } else {
+            $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
+        }
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 

@@ -24,7 +24,7 @@ class MenuItem extends Model
         return Attribute::get(fn () => app()->getLocale() === 'ru' ? $this->label_ru : $this->label_uz);
     }
 
-    /** Relative paths ("/katalog", "/#about") resolve against the site; full URLs pass through. */
+    /** Relative paths ("/catalog", "/#about") resolve against the site; full URLs pass through. */
     protected function href(): Attribute
     {
         return Attribute::get(fn () => SafeUrl::href($this->url));

@@ -8,7 +8,7 @@
     </div>
     <input type="text" name="items[{{ $i }}][label_uz]" value="{{ $row['label_uz'] ?? '' }}" placeholder="{{ __('admin.menu.label_uz') }}" class="{{ $input }}">
     <input type="text" name="items[{{ $i }}][label_ru]" value="{{ $row['label_ru'] ?? '' }}" placeholder="{{ __('admin.menu.label_ru') }}" class="{{ $input }}">
-    <input type="text" name="items[{{ $i }}][url]" value="{{ $row['url'] ?? '' }}" placeholder="/katalog" list="menu-suggestions" class="{{ $input }} font-mono">
+    <input type="text" name="items[{{ $i }}][url]" value="{{ $row['url'] ?? '' }}" placeholder="/catalog" list="menu-suggestions" class="{{ $input }} font-mono">
     <label class="flex items-center gap-2 text-sm text-ink-soft lg:justify-center">
         <input type="checkbox" name="items[{{ $i }}][new_tab]" value="1" @checked($row['new_tab'] ?? false) class="rounded border-line">
         <span class="lg:sr-only">{{ __('admin.menu.new_tab') }}</span>

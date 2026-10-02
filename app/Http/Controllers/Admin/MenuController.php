@@ -16,8 +16,8 @@ class MenuController extends Controller
     public function edit()
     {
         // Suggestions for the URL field (a <datalist>), so admins can pick real pages.
-        $suggestions = collect(['/', '/katalog', '/news', '/#about', '/#contact'])
-            ->merge(Category::orderBy('sort_order')->pluck('slug')->map(fn ($s) => "/katalog/{$s}"))
+        $suggestions = collect(['/', '/catalog', '/news', '/#about', '/#contact'])
+            ->merge(Category::orderBy('sort_order')->pluck('slug')->map(fn ($s) => "/catalog/{$s}"))
             ->merge(Article::orderByDesc('published_at')->pluck('slug')->map(fn ($s) => "/news/{$s}"));
 
         return view('admin.menu.edit', [

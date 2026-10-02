@@ -7,6 +7,8 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SeoController;
+use App\Http\Controllers\TelegramAppController;
+use App\Http\Controllers\TelegramWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,24 +26,42 @@ Route::get('sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
 Route::prefix('{locale}')->where(['locale' => 'uz|ru'])->group(function () {
     Route::get('/', HomeController::class)->name('home');
 
+    // Old section names (/uz/katalog/…, /uz/category/…) → 301 to /uz/catalog/….
+    Route::get('{old}/{path?}', [LocaleController::class, 'legacySection'])
+        ->where(['old' => 'katalog|category', 'path' => '.*']);
+
     // Pre-rename category slugs (scan_engine → scan-engine …) → 301.
-    Route::get('katalog/{slug}/{rest?}', [LocaleController::class, 'legacyCategory'])
+    Route::get('catalog/{slug}/{rest?}', [LocaleController::class, 'legacyCategory'])
         ->where('slug', LocaleController::legacySlugPattern());
 
-    Route::get('katalog', [CatalogController::class, 'index'])->name('catalog.index');
-    Route::get('katalog/{category:slug}', [CatalogController::class, 'category'])->name('catalog.category');
-    Route::get('katalog/{category:slug}/{product:slug}', [CatalogController::class, 'item'])->name('catalog.item');
+    Route::get('catalog', [CatalogController::class, 'index'])->name('catalog.index');
+    Route::get('catalog/{category:slug}', [CatalogController::class, 'category'])->name('catalog.category');
+    Route::get('catalog/{category:slug}/{product:slug}', [CatalogController::class, 'item'])->name('catalog.item');
 
     Route::get('search', [SearchController::class, 'index'])->name('search.index');
-    Route::get('search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:60,1')->name('search.suggest');
+    Route::get('search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:search')->name('search.suggest');
 
     Route::get('news', [NewsController::class, 'index'])->name('news.index');
     Route::get('news/{article:slug}', [NewsController::class, 'show'])->name('news.show');
 });
 
+/*
+| Telegram Mini App (catalog inside Telegram) + bot webhook. See
+| TelegramAppController / TelegramWebhookController and `telegram:setup`.
+*/
+Route::get('tg', [TelegramAppController::class, 'entry'])->name('tg.entry');
+Route::post('tg/lead', [TelegramAppController::class, 'lead'])->middleware('throttle:tg-lead')->name('tg.lead');
+Route::prefix('tg/{locale}')->where(['locale' => 'uz|ru'])->name('tg.')->group(function () {
+    Route::get('/', [TelegramAppController::class, 'home'])->name('home');
+    Route::get('c/{category:slug}', [TelegramAppController::class, 'category'])->name('category');
+    Route::get('p/{category:slug}/{product:slug}', [TelegramAppController::class, 'product'])->name('product');
+});
+// No rate limit: protected by the webhook secret, and all bot traffic comes from a few Telegram IPs.
+Route::post('telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
+
 // URLs from before the locale prefix → 301 to the /uz/ version.
 Route::get('{section}/{path?}', [LocaleController::class, 'legacy'])
-    ->where(['section' => 'katalog|news', 'path' => '.*']);
+    ->where(['section' => 'katalog|catalog|category|news', 'path' => '.*']);
 
 // Admin UI language (session-based; public pages use the URL prefix instead).
 Route::get('til/{lang}', function (Request $request, string $lang) {
@@ -63,7 +83,7 @@ Route::get('til/{lang}', function (Request $request, string $lang) {
 */
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [Admin\AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [Admin\AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.attempt');
+    Route::post('login', [Admin\AuthController::class, 'login'])->middleware('throttle:admin-login')->name('login.attempt');
 
     Route::middleware('admin.auth')->group(function () {
         Route::post('logout', [Admin\AuthController::class, 'logout'])->name('logout');
@@ -74,11 +94,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', Admin\ProductController::class)->except(['show']);
         Route::resource('features', Admin\FeatureController::class)->except(['show']);
         Route::resource('articles', Admin\ArticleController::class)->except(['show']);
-        Route::post('article-images', Admin\ArticleImageController::class)->middleware('throttle:60,1')->name('article-images.store');
+        Route::post('article-images', Admin\ArticleImageController::class)->middleware('throttle:uploads')->name('article-images.store');
         Route::resource('banners', Admin\BannerController::class)->except(['show']);
 
         Route::get('menu', [Admin\MenuController::class, 'edit'])->name('menu.edit');
         Route::put('menu', [Admin\MenuController::class, 'update'])->name('menu.update');
+
+        Route::resource('bot-knowledge', Admin\BotKnowledgeController::class)->except(['show'])->parameters(['bot-knowledge' => 'botKnowledge']);
+        Route::get('bot/instructions', [Admin\BotTrainingController::class, 'instructions'])->name('bot.instructions');
+        Route::put('bot/instructions', [Admin\BotTrainingController::class, 'saveInstructions'])->name('bot.instructions.save');
+        Route::delete('bot/instructions', [Admin\BotTrainingController::class, 'resetInstructions'])->name('bot.instructions.reset');
+        Route::get('bot/playground', [Admin\BotTrainingController::class, 'playground'])->name('bot.playground');
+        Route::post('bot/playground', [Admin\BotTrainingController::class, 'ask'])->middleware('throttle:uploads')->name('bot.playground.ask');
+
+        Route::get('leads', [Admin\LeadController::class, 'index'])->name('leads.index');
+        Route::patch('leads/{lead}', [Admin\LeadController::class, 'update'])->name('leads.update');
+        Route::get('telegram-clients', [Admin\TelegramClientController::class, 'index'])->name('telegram-clients.index');
+        Route::get('telegram-clients/{client}', [Admin\TelegramClientController::class, 'show'])->name('telegram-clients.show');
+        Route::patch('telegram-clients/{client}', [Admin\TelegramClientController::class, 'update'])->name('telegram-clients.update');
 
         Route::get('hero', [Admin\HeroController::class, 'edit'])->name('hero.edit');
         Route::put('hero', [Admin\HeroController::class, 'update'])->name('hero.update');

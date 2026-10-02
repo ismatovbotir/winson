@@ -29,7 +29,7 @@
         <div class="mt-6">
             @include('admin.partials.seo-fields', [
                 'model' => $category,
-                'path' => 'katalog/'.$category->slug,
+                'path' => 'catalog/'.$category->slug,
                 'fallback' => collect(['uz', 'ru'])->mapWithKeys(fn ($l) => [$l => [
                     'title' => $category->{'name_'.$l},
                     'description' => $category->{'description_'.$l} ?: __('site.seo.category_description', ['name' => $category->{'name_'.$l}], $l),

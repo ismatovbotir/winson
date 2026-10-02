@@ -154,6 +154,7 @@ class SiteSearch
             return [
                 'item' => [
                     'type' => 'product',
+                    'id' => $p->id,
                     'title' => $p->name,
                     'url' => $p->category ? route('catalog.item', [$p->category, $p]) : route('catalog.index'),
                     'image' => $p->image_url,
